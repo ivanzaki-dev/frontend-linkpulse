@@ -16,6 +16,8 @@ Response `200`: `{ "status": "ok", "service": "linkpulse-frontend" }`
 4. Health check path: `/api/health`
 5. Environment variables:
 
+| `NEXT_PUBLIC_SHOW_DEV_LINKS` | `false` on public production (hides footer dev/admin links) |
+
 | Variable | Build / Runtime | Example |
 |----------|-----------------|--------|
 | `NEXT_PUBLIC_API_URL` | **Build** (Docker build arg) | `https://<backend-host>/v1` |

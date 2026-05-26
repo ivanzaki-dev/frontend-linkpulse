@@ -20,7 +20,7 @@ export default function AdminDashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="text-sm text-gray-500 mt-1">Konfigurasi bisnis di backend API.</p>
+      <p className="text-sm text-gray-500 mt-1">Kelola harga, promo, voucher, dan pesanan.</p>
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <Card>
           <div className="text-xs text-gray-500 uppercase">Harga per link</div>

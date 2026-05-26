@@ -1,5 +1,6 @@
 'use client';
 
+import { labelStatus } from '@/lib/copy';
 import { cn, fmtIDR } from '@/lib/utils';
 import type { ReactNode } from 'react';
 
@@ -95,7 +96,7 @@ export function StatusBadge({ status }: { status: string }) {
   };
   return (
     <span className={cn('inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', map[status] || map.queued)}>
-      {status.replace(/_/g, ' ')}
+      {labelStatus(status)}
     </span>
   );
 }

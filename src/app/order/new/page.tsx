@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { CustomerHeader } from '@/components/customer-header';
 import { Alert, Button, Card, TextInput } from '@/components/ui';
 import { createPreviewJob, ApiClientError } from '@/lib/api';
+import { copy } from '@/lib/copy';
 
 type Row = { id: string; url: string; label: string };
 
 export default function NewOrderPage() {
   const router = useRouter();
+  const t = copy.order;
   const [rows, setRows] = useState<Row[]>([{ id: '1', url: '', label: '' }]);
   const [voucher, setVoucher] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function NewOrderPage() {
     setLoading(true);
     try {
       const youtube_urls = rows.map((r) => r.url.trim()).filter(Boolean);
-      const labels = rows.map((r, i) => r.label.trim() || `YouTube ${String.fromCharCode(65 + i)}`);
+      const labels = rows.map((r, i) => r.label.trim() || `Video ${String.fromCharCode(65 + i)}`);
       const out = await createPreviewJob({
         youtube_urls,
         labels,
@@ -35,7 +37,7 @@ export default function NewOrderPage() {
       });
       router.push(`/preview/${out.preview_job_id}`);
     } catch (e) {
-      setError(e instanceof ApiClientError ? e.message : 'Gagal membuat preview');
+      setError(e instanceof ApiClientError ? e.message : t.errorCreate);
     } finally {
       setLoading(false);
     }
@@ -45,8 +47,8 @@ export default function NewOrderPage() {
     <>
       <CustomerHeader />
       <div className="max-w-[820px] mx-auto px-6 py-10 pb-32">
-        <h1 className="text-3xl font-semibold text-gray-900">Order baru</h1>
-        <p className="text-sm text-gray-500 mt-1">Tempel link video YouTube. Maksimal 20 per order.</p>
+        <h1 className="text-3xl font-semibold text-gray-900">{t.title}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t.subtitle}</p>
 
         {error && (
           <Alert kind="error" className="mt-4">
@@ -56,7 +58,7 @@ export default function NewOrderPage() {
 
         <Card className="mt-6">
           <div className="flex justify-between mb-4">
-            <span className="font-medium">Video YouTube</span>
+            <span className="font-medium">{t.videos}</span>
             <span className="text-sm text-gray-500">
               {valid} / {max}
             </span>
@@ -72,7 +74,7 @@ export default function NewOrderPage() {
                   }
                 />
                 <TextInput
-                  placeholder={`Label · YouTube ${String.fromCharCode(65 + i)}`}
+                  placeholder={`Nama video (opsional) · Video ${String.fromCharCode(65 + i)}`}
                   value={r.label}
                   onChange={(e) =>
                     setRows(rows.map((x) => (x.id === r.id ? { ...x, label: e.target.value } : x)))
@@ -82,31 +84,31 @@ export default function NewOrderPage() {
             ))}
           </div>
           <Button variant="soft" size="sm" className="mt-4" onClick={add} disabled={rows.length >= max}>
-            + Tambah video
+            {t.addVideo}
           </Button>
         </Card>
 
         <Card className="mt-4">
           <TextInput
-            label="Kode voucher (opsional)"
+            label={t.voucherLabel}
             value={voucher}
             onChange={(e) => setVoucher(e.target.value.toUpperCase())}
             placeholder="LAUNCH10"
           />
-          <p className="text-xs text-gray-500 mt-2">Voucher dievaluasi di backend setelah Preview selesai.</p>
+          <p className="text-xs text-gray-500 mt-2">{t.voucherHint}</p>
         </Card>
 
-        <Alert kind="info" className="mt-4" title="Preview berjalan di server">
-          Extract berjalan di worker LinkPulse. Pastikan Orchestrator ON di laptop worker.
+        <Alert kind="info" className="mt-4" title={t.infoTitle}>
+          {t.infoBody}
         </Alert>
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 py-4 px-6">
           <div className="max-w-[820px] mx-auto flex justify-between items-center">
             <span className="text-sm text-gray-500">
-              {valid === 0 ? 'Minimal 1 URL' : `${valid} video siap di-Preview`}
+              {valid === 0 ? t.footerNone : t.footerReady(valid)}
             </span>
             <Button disabled={valid === 0 || loading} loading={loading} onClick={submit}>
-              Jalankan Preview
+              {t.submit}
             </Button>
           </div>
         </div>
