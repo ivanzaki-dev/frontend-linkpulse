@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminLogin, ApiClientError } from '@/lib/api';
+import { adminLogin, ApiClientError, getApiConfigWarning } from '@/lib/api';
 import { setAdminEmail, setAdminToken } from '@/lib/auth';
 import { Alert, Button, Card, LogoMark, TextInput } from '@/components/ui';
 
@@ -12,6 +12,11 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [configWarning, setConfigWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    setConfigWarning(getApiConfigWarning());
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +42,11 @@ export default function AdminLoginPage() {
           <LogoMark size="md" />
           <h1 className="text-xl font-semibold mt-4">Admin LinkPulse</h1>
           <p className="text-sm text-gray-500 mt-1">Email & password dari backend .env</p>
+          {configWarning && (
+            <Alert kind="error" className="mt-3">
+              {configWarning}
+            </Alert>
+          )}
           {error && (
             <Alert kind="error" className="mt-3">
               {error}

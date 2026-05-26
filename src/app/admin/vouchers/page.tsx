@@ -14,6 +14,7 @@ import {
 } from '@/components/ui';
 import { deleteVoucher, listVouchers, updateVoucher } from '@/lib/api';
 import type { Voucher } from '@/lib/types';
+import { formatValidityRange } from '@/lib/validity';
 
 export default function AdminVouchersPage() {
   const [rows, setRows] = useState<Voucher[]>([]);
@@ -35,7 +36,8 @@ export default function AdminVouchersPage() {
             <DataTableHeaderCell>Kode</DataTableHeaderCell>
             <DataTableHeaderCell>Tipe</DataTableHeaderCell>
             <DataTableHeaderCell>Nilai</DataTableHeaderCell>
-            <DataTableHeaderCell>Pakai</DataTableHeaderCell>
+            <DataTableHeaderCell>Berlaku</DataTableHeaderCell>
+            <DataTableHeaderCell>Kuota</DataTableHeaderCell>
             <DataTableHeaderCell>Aktif</DataTableHeaderCell>
             <DataTableHeaderCell />
           </DataTableHead>
@@ -48,6 +50,11 @@ export default function AdminVouchersPage() {
                 <DataTableCell>{v.type}</DataTableCell>
                 <DataTableCell>
                   <span className="tabular-nums">{v.value}</span>
+                </DataTableCell>
+                <DataTableCell>
+                  <span className="text-xs text-gray-600">
+                    {formatValidityRange(v.valid_from, v.valid_until)}
+                  </span>
                 </DataTableCell>
                 <DataTableCell>
                   <span className="tabular-nums">

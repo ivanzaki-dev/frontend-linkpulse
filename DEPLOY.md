@@ -20,8 +20,11 @@ Response `200`: `{ "status": "ok", "service": "linkpulse-frontend" }`
 
 | Variable | Build / Runtime | Example |
 |----------|-----------------|--------|
-| `NEXT_PUBLIC_API_URL` | **Build** (Docker build arg) | `https://<backend-host>/v1` |
-| `API_URL` | Runtime | Same as above (server routes `/api/pay`) |
+| `NEXT_PUBLIC_API_URL` | **Build** (Docker build arg) | `https://mo5ub2s6knxuqchfa3m925ep.app.ivanzaki.online/v1` (**backend**, bukan URL frontend) |
+| `API_URL` | Runtime | Same as `NEXT_PUBLIC_API_URL` (server route `/api/pay`) |
+
+**Salah umum:** `NEXT_PUBLIC_API_URL=https://ji3qif2…/v1` (host frontend) → login/API 404 atau error Bearer.  
+**Benar:** API = `mo5ub2…`, UI admin = `ji3qif2…/admin/login` (tanpa `/v1`).
 | `PAYMENT_WEBHOOK_SECRET` | Runtime | Same value as backend `PAYMENT_WEBHOOK_SECRET` |
 
 > `NEXT_PUBLIC_*` is baked at image build time. Set it in Coolify **Build** variables or Dockerfile `ARG`.

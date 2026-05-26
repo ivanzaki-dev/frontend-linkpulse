@@ -9,8 +9,30 @@ import type {
 } from './types';
 import type { ApiError } from './types';
 
-const API_BASE =
+/** Backend API base — must be the API host (e.g. mo5ub2…), NOT the frontend Coolify URL. */
+export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://127.0.0.1:3000/v1';
+
+/**
+ * Warn when NEXT_PUBLIC_API_URL points at the same host as the Next.js app (common Coolify mistake).
+ */
+export function getApiConfigWarning(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const api = new URL(API_BASE);
+    const page = new URL(window.location.href);
+    if (api.hostname === page.hostname) {
+      return (
+        'NEXT_PUBLIC_API_URL mengarah ke host frontend yang sama. ' +
+        'Set ke URL backend API (mis. https://mo5ub2s6knxuqchfa3m925ep.app.ivanzaki.online/v1), ' +
+        'lalu rebuild image frontend. Halaman admin: /admin/login (bukan /v1/admin/login).'
+      );
+    }
+  } catch {
+    return 'NEXT_PUBLIC_API_URL tidak valid.';
+  }
+  return null;
+}
 
 export class ApiClientError extends Error {
   code: string;
@@ -158,7 +180,7 @@ export async function listPromotions() {
   return parseJson<{ promotions: import('./types').Promotion[] }>(res);
 }
 
-export async function createPromotion(data: Record<string, unknown>) {
+export async function createPromotion(data: import('./types').PromotionCreateInput) {
   const res = await adminFetch(`${API_BASE}/admin/promotions`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -166,7 +188,10 @@ export async function createPromotion(data: Record<string, unknown>) {
   return parseJson<{ promotion: import('./types').Promotion }>(res);
 }
 
-export async function updatePromotion(id: string, data: Record<string, unknown>) {
+export async function updatePromotion(
+  id: string,
+  data: Partial<import('./types').PromotionInput>,
+) {
   const res = await adminFetch(`${API_BASE}/admin/promotions/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
@@ -186,7 +211,7 @@ export async function listVouchers() {
   return parseJson<{ vouchers: import('./types').Voucher[] }>(res);
 }
 
-export async function createVoucher(data: Record<string, unknown>) {
+export async function createVoucher(data: import('./types').VoucherCreateInput) {
   const res = await adminFetch(`${API_BASE}/admin/vouchers`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -194,7 +219,10 @@ export async function createVoucher(data: Record<string, unknown>) {
   return parseJson<{ voucher: import('./types').Voucher }>(res);
 }
 
-export async function updateVoucher(id: string, data: Record<string, unknown>) {
+export async function updateVoucher(
+  id: string,
+  data: Partial<import('./types').VoucherInput>,
+) {
   const res = await adminFetch(`${API_BASE}/admin/vouchers/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),

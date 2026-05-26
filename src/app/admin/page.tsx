@@ -62,15 +62,25 @@ export default function AdminDashboardPage() {
   };
 
   const runSeed = async () => {
-    const r = await seedAdminStats();
-    setSeedMsg(`Data demo ditambahkan: ${r.inserted} order`);
-    await load();
+    setSeedMsg('');
+    try {
+      const r = await seedAdminStats();
+      setSeedMsg(`Data demo ditambahkan: ${r.inserted} order`);
+      await load();
+    } catch (err) {
+      setSeedMsg(err instanceof Error ? err.message : 'Gagal memuat data demo');
+    }
   };
 
   const runClearSeed = async () => {
-    const r = await clearAdminStats();
-    setSeedMsg(`Data demo dihapus: ${r.deleted} order`);
-    await load();
+    setSeedMsg('');
+    try {
+      const r = await clearAdminStats();
+      setSeedMsg(`Data demo dihapus: ${r.deleted} order`);
+      await load();
+    } catch (err) {
+      setSeedMsg(err instanceof Error ? err.message : 'Gagal menghapus data demo');
+    }
   };
 
   if (loading) {
@@ -102,7 +112,11 @@ export default function AdminDashboardPage() {
 
       {SEED_ENABLED && (
         <Card>
-          <p className="text-sm text-gray-600">Data demo untuk grafik (staging saja)</p>
+          <p className="text-sm text-gray-600">
+            Data demo untuk grafik (staging). Saat deploy backend dengan{' '}
+            <code className="text-xs">ADMIN_STATS_SEED_ENABLED=true</code>, data terisi otomatis
+            jika belum ada. Tombol di bawah untuk muat/hapus ulang manual.
+          </p>
           <div className="flex flex-wrap gap-2 mt-3">
             <Button variant="secondary" type="button" onClick={runSeed}>
               Muat data demo
@@ -111,7 +125,14 @@ export default function AdminDashboardPage() {
               Hapus data demo
             </Button>
           </div>
-          {seedMsg && <p className="text-xs text-gray-500 mt-2">{seedMsg}</p>}
+          {seedMsg && (
+            <p
+              className={`text-xs mt-2 ${seedMsg.startsWith('Gagal') ? 'text-error-600' : 'text-gray-500'}`}
+              role="status"
+            >
+              {seedMsg}
+            </p>
+          )}
         </Card>
       )}
 

@@ -93,6 +93,37 @@ export type Voucher = {
   active: boolean;
 };
 
+export type VoucherInput = {
+  code?: string;
+  type?: 'percent' | 'fixed';
+  value?: number;
+  min_links?: number | null;
+  max_uses?: number;
+  valid_from?: string;
+  valid_until?: string;
+  active?: boolean;
+};
+
+export type VoucherCreateInput = Required<
+  Pick<VoucherInput, 'code' | 'type' | 'value' | 'max_uses' | 'valid_from' | 'valid_until'>
+> &
+  Pick<VoucherInput, 'min_links' | 'active'>;
+
+export type PromotionInput = {
+  name?: string;
+  type?: 'percent';
+  value?: number;
+  valid_from?: string;
+  valid_until?: string;
+  active?: boolean;
+};
+
+export type PromotionCreateInput = Required<
+  Pick<PromotionInput, 'name' | 'value' | 'valid_from' | 'valid_until'>
+> & {
+  type: 'percent';
+} & Pick<PromotionInput, 'active'>;
+
 export type ApiError = {
   error?: { code?: string; message?: string };
 };

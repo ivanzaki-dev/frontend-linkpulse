@@ -14,6 +14,7 @@ import {
 } from '@/components/ui';
 import { deletePromotion, listPromotions, updatePromotion } from '@/lib/api';
 import type { Promotion } from '@/lib/types';
+import { formatValidityRange } from '@/lib/validity';
 
 export default function AdminPromotionsPage() {
   const [rows, setRows] = useState<Promotion[]>([]);
@@ -46,8 +47,8 @@ export default function AdminPromotionsPage() {
         <DataTable>
           <DataTableHead>
             <DataTableHeaderCell>Nama</DataTableHeaderCell>
-            <DataTableHeaderCell>Tipe</DataTableHeaderCell>
-            <DataTableHeaderCell>Nilai</DataTableHeaderCell>
+            <DataTableHeaderCell>Diskon</DataTableHeaderCell>
+            <DataTableHeaderCell>Berlaku</DataTableHeaderCell>
             <DataTableHeaderCell>Aktif</DataTableHeaderCell>
             <DataTableHeaderCell />
           </DataTableHead>
@@ -55,9 +56,13 @@ export default function AdminPromotionsPage() {
             {rows.map((p) => (
               <DataTableRow key={p.id}>
                 <DataTableCell>{p.name}</DataTableCell>
-                <DataTableCell>{p.type}</DataTableCell>
                 <DataTableCell>
-                  <span className="tabular-nums">{p.value}</span>
+                  <span className="tabular-nums">{p.value}%</span>
+                </DataTableCell>
+                <DataTableCell>
+                  <span className="text-xs text-gray-600">
+                    {formatValidityRange(p.valid_from, p.valid_until)}
+                  </span>
                 </DataTableCell>
                 <DataTableCell>
                   <button
