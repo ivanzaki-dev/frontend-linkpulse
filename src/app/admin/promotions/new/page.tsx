@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, TextInput } from '@/components/ui';
+import { Button, Card, SelectField, TextInput } from '@/components/ui';
 import { createPromotion } from '@/lib/api';
 
 export default function NewPromotionPage() {
@@ -19,23 +19,17 @@ export default function NewPromotionPage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-semibold">Promosi baru</h1>
-      <Card className="mt-6">
-        <form onSubmit={submit} className="space-y-4">
-          <TextInput label="Nama" value={name} onChange={(e) => setName(e.target.value)} required />
-          <div>
-            <label className="text-sm font-medium">Tipe</label>
-            <select
-              className="mt-1 w-full border rounded-lg px-3 py-2"
-              value={type}
-              onChange={(e) => setType(e.target.value as 'percent' | 'fixed')}
-            >
-              <option value="percent">Persen (%)</option>
-              <option value="fixed">Nominal (Rp)</option>
-            </select>
-          </div>
+      <Card>
+        <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
+          <TextInput className="md:col-span-2" label="Nama" value={name} onChange={(e) => setName(e.target.value)} required />
+          <SelectField label="Tipe" value={type} onChange={(e) => setType(e.target.value as 'percent' | 'fixed')}>
+            <option value="percent">Persen (%)</option>
+            <option value="fixed">Nominal (Rp)</option>
+          </SelectField>
           <TextInput label="Nilai" type="number" value={String(value)} onChange={(e) => setValue(Number(e.target.value))} />
-          <Button type="submit">Simpan</Button>
+          <div className="md:col-span-2">
+            <Button type="submit">Simpan</Button>
+          </div>
         </form>
       </Card>
     </div>

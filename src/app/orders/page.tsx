@@ -3,7 +3,20 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CustomerHeader } from '@/components/customer-header';
-import { Card, StatusBadge } from '@/components/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeaderCell,
+  DataTableRow,
+  EmptyState,
+  PageHeader,
+  StatusBadge,
+} from '@/components/ui';
 import { listOrders, ApiClientError } from '@/lib/api';
 import { copy } from '@/lib/copy';
 import type { OrderListItem } from '@/lib/types';
@@ -24,41 +37,89 @@ export default function OrdersPage() {
     <>
       <CustomerHeader />
       <div className="max-w-[1120px] mx-auto px-6 py-10">
-        <h1 className="text-3xl font-semibold">{t.title}</h1>
-        {error && <p className="text-error-600 text-sm mt-2">{error}</p>}
-        <Card className="mt-6 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-500 border-b">
-                <th className="pb-2">Tanggal</th>
-                <th className="pb-2">No. pesanan</th>
-                <th className="pb-2">Link Shopee</th>
-                <th className="pb-2">Total</th>
-                <th className="pb-2">Status</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr key={o.id} className="border-b border-gray-50">
-                  <td className="py-3">{fmtDateTime(o.created_at)}</td>
-                  <td className="py-3 text-xs text-gray-600">{truncId(o.id)}</td>
-                  <td className="py-3">{o.total_shopee_links}</td>
-                  <td className="py-3">{fmtIDR(Number(o.total_price))}</td>
-                  <td className="py-3">
-                    <StatusBadge status={o.status} />
-                  </td>
-                  <td className="py-3">
-                    <Link href={`/orders/${o.id}`} className="text-primary-600 hover:underline">
-                      {t.detail}
+        <PageHeader title={t.title} />
+
+        {error && (
+          <Alert kind="error" className="mt-4">
+            {error}
+          </Alert>
+        )}
+
+        <Card className="mt-6">
+          {orders.length === 0 && !error ? (
+            <EmptyState title={t.empty} description={t.emptyHint}>
+              <Link href="/order/new">
+                <Button>{copy.landing.ctaPreview}</Button>
+              </Link>
+            </EmptyState>
+          ) : (
+            <>
+              <div className="md:hidden space-y-3">
+                {orders.map((o) => (
+                  <div
+                    key={o.id}
+                    className="rounded-lg border border-gray-100 p-4 hover:bg-primary-50/30 transition-colors"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <p className="text-xs text-gray-500">{fmtDateTime(o.created_at)}</p>
+                        <p className="font-mono text-xs text-gray-600 mt-0.5">{truncId(o.id)}</p>
+                      </div>
+                      <StatusBadge status={o.status} />
+                    </div>
+                    <div className="mt-3 flex justify-between text-sm">
+                      <span className="text-gray-500">{o.total_shopee_links} link</span>
+                      <span className="font-medium tabular-nums">{fmtIDR(Number(o.total_price))}</span>
+                    </div>
+                    <Link
+                      href={`/orders/${o.id}`}
+                      className="mt-3 inline-flex min-h-11 items-center text-sm text-primary-600 font-medium"
+                    >
+                      {t.detail} →
                     </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {orders.length === 0 && !error && (
-            <p className="text-center text-gray-500 py-8">{t.empty}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden md:block">
+                <DataTable>
+                  <DataTableHead>
+                    <DataTableHeaderCell>Tanggal</DataTableHeaderCell>
+                    <DataTableHeaderCell>No. pesanan</DataTableHeaderCell>
+                    <DataTableHeaderCell>Link Shopee</DataTableHeaderCell>
+                    <DataTableHeaderCell>Total</DataTableHeaderCell>
+                    <DataTableHeaderCell>Status</DataTableHeaderCell>
+                    <DataTableHeaderCell />
+                  </DataTableHead>
+                  <DataTableBody>
+                    {orders.map((o) => (
+                      <DataTableRow key={o.id}>
+                        <DataTableCell>{fmtDateTime(o.created_at)}</DataTableCell>
+                        <DataTableCell>
+                          <span className="font-mono text-xs text-gray-600">{truncId(o.id)}</span>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <span className="tabular-nums">{o.total_shopee_links}</span>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <span className="tabular-nums">{fmtIDR(Number(o.total_price))}</span>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <StatusBadge status={o.status} />
+                        </DataTableCell>
+                        <DataTableCell align="right">
+                          <Link
+                            href={`/orders/${o.id}`}
+                            className="text-primary-600 hover:underline min-h-11 inline-flex items-center"
+                          >
+                            {t.detail}
+                          </Link>
+                        </DataTableCell>
+                      </DataTableRow>
+                    ))}
+                  </DataTableBody>
+                </DataTable>
+              </div>
+            </>
           )}
         </Card>
       </div>

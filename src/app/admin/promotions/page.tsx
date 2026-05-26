@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button, Card } from '@/components/ui';
+import {
+  Button,
+  Card,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeaderCell,
+  DataTableRow,
+} from '@/components/ui';
 import { deletePromotion, listPromotions, updatePromotion } from '@/lib/api';
 import type { Promotion } from '@/lib/types';
 
@@ -28,46 +37,53 @@ export default function AdminPromotionsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Promosi</h1>
+      <div className="flex justify-end mb-4">
         <Link href="/admin/promotions/new">
           <Button>+ Promosi baru</Button>
         </Link>
       </div>
-      <Card className="mt-6 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500 border-b">
-              <th className="pb-2">Nama</th>
-              <th>Tipe</th>
-              <th>Nilai</th>
-              <th>Aktif</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
+      <Card className="overflow-x-auto">
+        <DataTable>
+          <DataTableHead>
+            <DataTableHeaderCell>Nama</DataTableHeaderCell>
+            <DataTableHeaderCell>Tipe</DataTableHeaderCell>
+            <DataTableHeaderCell>Nilai</DataTableHeaderCell>
+            <DataTableHeaderCell>Aktif</DataTableHeaderCell>
+            <DataTableHeaderCell />
+          </DataTableHead>
+          <DataTableBody>
             {rows.map((p) => (
-              <tr key={p.id} className="border-b border-gray-50">
-                <td className="py-2">{p.name}</td>
-                <td>{p.type}</td>
-                <td>{p.value}</td>
-                <td>
-                  <button type="button" className="text-primary-600" onClick={() => toggle(p)}>
+              <DataTableRow key={p.id}>
+                <DataTableCell>{p.name}</DataTableCell>
+                <DataTableCell>{p.type}</DataTableCell>
+                <DataTableCell>
+                  <span className="tabular-nums">{p.value}</span>
+                </DataTableCell>
+                <DataTableCell>
+                  <button
+                    type="button"
+                    className="text-primary-600 min-h-11 inline-flex items-center"
+                    onClick={() => toggle(p)}
+                  >
                     {p.active ? 'Ya' : 'Tidak'}
                   </button>
-                </td>
-                <td className="py-2 space-x-2">
-                  <Link href={`/admin/promotions/${p.id}/edit`} className="text-primary-600">
+                </DataTableCell>
+                <DataTableCell align="right">
+                  <Link href={`/admin/promotions/${p.id}/edit`} className="text-primary-600 min-h-11 inline-flex items-center mr-3">
                     Edit
                   </Link>
-                  <button type="button" className="text-error-600" onClick={() => remove(p.id)}>
+                  <button
+                    type="button"
+                    className="text-error-600 min-h-11 inline-flex items-center"
+                    onClick={() => remove(p.id)}
+                  >
                     Hapus
                   </button>
-                </td>
-              </tr>
+                </DataTableCell>
+              </DataTableRow>
             ))}
-          </tbody>
-        </table>
+          </DataTableBody>
+        </DataTable>
       </Card>
     </div>
   );

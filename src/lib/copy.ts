@@ -23,6 +23,26 @@ export const copy = {
     ctaPreview: 'Cek link gratis dulu',
     ctaLogin: 'Masuk',
     sampleTitle: 'Contoh ringkasan harga',
+    howTitle: 'Cara kerja',
+    steps: [
+      {
+        title: 'Tempel URL YouTube',
+        body: 'Masukkan hingga 20 link video. Beri label opsional per video.',
+      },
+      {
+        title: 'Preview link Shopee',
+        body: 'Kami scan deskripsi dan panel video untuk menemukan link affiliate Shopee.',
+      },
+      {
+        title: 'Bayar & unduh laporan',
+        body: 'Setelah bayar, tim memeriksa setiap link dan menyiapkan laporan PDF.',
+      },
+    ],
+    pricingTitle: 'Harga transparan',
+    pricingBody: 'Rp 2.000 per link Shopee yang ditemukan.',
+    pricingNote: 'Diskon promosi dan voucher dapat diterapkan otomatis saat checkout.',
+    navHow: 'Cara kerja',
+    navPricing: 'Harga',
   },
   order: {
     title: 'Pesan pengecekan baru',
@@ -55,6 +75,8 @@ export const copy = {
     pricingNote: 'Diskon promo dan voucher sudah dihitung otomatis.',
     errorLoad: 'Gagal memuat ringkasan.',
     errorOrder: 'Gagal membuat pesanan.',
+    retry: 'Coba lagi',
+    editUrls: 'Edit URL',
   },
   checkout: {
     title: 'Pembayaran',
@@ -86,6 +108,7 @@ export const copy = {
   orders: {
     title: 'Riwayat pesanan',
     empty: 'Belum ada pesanan.',
+    emptyHint: 'Mulai dengan menempel link video YouTube untuk pengecekan pertama Anda.',
     detail: 'Detail',
     errorLoad: 'Gagal memuat riwayat.',
   },
@@ -93,6 +116,7 @@ export const copy = {
     title: 'Masuk ke LinkPulse',
     subtitle: 'Masuk dengan Google akan segera tersedia.',
     stagingCta: 'Masuk mode uji (staging)',
+    legal: 'Dengan masuk, Anda setuju syarat & privasi kami.',
   },
   devLogin: {
     title: 'Masuk mode uji',

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CustomerHeader } from '@/components/customer-header';
-import { Button, Card, TextInput } from '@/components/ui';
+import { Button, Card, LogoMark, TextInput } from '@/components/ui';
 import { setTestUserEmail } from '@/lib/auth';
 import { copy } from '@/lib/copy';
 
@@ -15,9 +15,10 @@ export default function DevLoginPage() {
   return (
     <>
       <CustomerHeader />
-      <div className="max-w-md mx-auto px-6 py-16">
-        <Card>
-          <h1 className="text-xl font-semibold">{t.title}</h1>
+      <div className="min-h-[60vh] flex items-center justify-center px-6 bg-gray-50">
+        <Card className="max-w-sm w-full !p-8">
+          <LogoMark size="md" />
+          <h1 className="text-xl font-semibold mt-4">{t.title}</h1>
           <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
           <TextInput
             className="mt-4"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Button } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 import { getPricingSettings, listPromotions, listVouchers } from '@/lib/api';
 import { fmtIDR } from '@/lib/utils';
 
@@ -18,38 +18,34 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="text-sm text-gray-500 mt-1">Kelola harga, promo, voucher, dan pesanan.</p>
-      <div className="grid md:grid-cols-3 gap-4 mt-6">
-        <Card>
-          <div className="text-xs text-gray-500 uppercase">Harga per link</div>
-          <div className="text-3xl font-semibold mt-2 text-primary-700">{fmtIDR(price)}</div>
-          <Link href="/admin/pricing">
-            <Button variant="ghost" size="sm" className="mt-3">
-              Ubah
-            </Button>
-          </Link>
-        </Card>
-        <Card>
-          <div className="text-xs text-gray-500 uppercase">Promo aktif</div>
-          <div className="text-3xl font-semibold mt-2">{promoCount}</div>
-          <Link href="/admin/promotions">
-            <Button variant="ghost" size="sm" className="mt-3">
-              Kelola
-            </Button>
-          </Link>
-        </Card>
-        <Card>
-          <div className="text-xs text-gray-500 uppercase">Voucher aktif</div>
-          <div className="text-3xl font-semibold mt-2">{voucherCount}</div>
-          <Link href="/admin/vouchers">
-            <Button variant="ghost" size="sm" className="mt-3">
-              Kelola
-            </Button>
-          </Link>
-        </Card>
-      </div>
+    <div className="grid md:grid-cols-3 gap-4">
+      <Card hoverable>
+        <div className="text-xs text-gray-500 uppercase tracking-wide">Harga per link</div>
+        <div className="text-3xl font-semibold mt-2 text-primary-700 tabular-nums">{fmtIDR(price)}</div>
+        <Link href="/admin/pricing">
+          <Button variant="ghost" size="sm" className="mt-3">
+            Ubah
+          </Button>
+        </Link>
+      </Card>
+      <Card hoverable>
+        <div className="text-xs text-gray-500 uppercase tracking-wide">Promo aktif</div>
+        <div className="text-3xl font-semibold mt-2 tabular-nums">{promoCount}</div>
+        <Link href="/admin/promotions">
+          <Button variant="ghost" size="sm" className="mt-3">
+            Kelola
+          </Button>
+        </Link>
+      </Card>
+      <Card hoverable>
+        <div className="text-xs text-gray-500 uppercase tracking-wide">Voucher aktif</div>
+        <div className="text-3xl font-semibold mt-2 tabular-nums">{voucherCount}</div>
+        <Link href="/admin/vouchers">
+          <Button variant="ghost" size="sm" className="mt-3">
+            Kelola
+          </Button>
+        </Link>
+      </Card>
     </div>
   );
 }

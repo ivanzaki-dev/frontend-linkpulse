@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin, ApiClientError } from '@/lib/api';
 import { setAdminToken } from '@/lib/auth';
-import { Button, Card, TextInput, LogoMark } from '@/components/ui';
+import { Alert, Button, Card, LogoMark, TextInput } from '@/components/ui';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -33,10 +33,14 @@ export default function AdminLoginPage() {
       <Card className="max-w-sm w-full !p-0 overflow-hidden">
         <div className="h-1.5 bg-primary-600" />
         <form className="p-7" onSubmit={submit}>
-          <LogoMark />
+          <LogoMark size="md" />
           <h1 className="text-xl font-semibold mt-4">Admin LinkPulse</h1>
           <p className="text-sm text-gray-500 mt-1">Email & password dari backend .env</p>
-          {error && <p className="text-sm text-error-600 mt-3">{error}</p>}
+          {error && (
+            <Alert kind="error" className="mt-3">
+              {error}
+            </Alert>
+          )}
           <TextInput className="mt-4" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <TextInput className="mt-3" label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           <Button className="mt-5" full loading={loading} type="submit">

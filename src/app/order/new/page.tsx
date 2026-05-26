@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CustomerHeader } from '@/components/customer-header';
-import { Alert, Button, Card, TextInput } from '@/components/ui';
+import { Alert, Button, Card, PageHeader, TextInput } from '@/components/ui';
 import { createPreviewJob, ApiClientError } from '@/lib/api';
 import { copy } from '@/lib/copy';
 
@@ -47,8 +47,7 @@ export default function NewOrderPage() {
     <>
       <CustomerHeader />
       <div className="max-w-[820px] mx-auto px-6 py-10 pb-32">
-        <h1 className="text-3xl font-semibold text-gray-900">{t.title}</h1>
-        <p className="text-sm text-gray-500 mt-1">{t.subtitle}</p>
+        <PageHeader title={t.title} subtitle={t.subtitle} />
 
         {error && (
           <Alert kind="error" className="mt-4">
@@ -59,13 +58,16 @@ export default function NewOrderPage() {
         <Card className="mt-6">
           <div className="flex justify-between mb-4">
             <span className="font-medium">{t.videos}</span>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 tabular-nums">
               {valid} / {max}
             </span>
           </div>
           <div className="space-y-3">
             {rows.map((r, i) => (
-              <div key={r.id} className="grid gap-2 sm:grid-cols-2">
+              <div
+                key={r.id}
+                className="grid gap-2 sm:grid-cols-2 rounded-lg border border-gray-100 bg-gray-50/50 p-3"
+              >
                 <TextInput
                   placeholder="https://www.youtube.com/watch?v=…"
                   value={r.url}
@@ -102,8 +104,8 @@ export default function NewOrderPage() {
           {t.infoBody}
         </Alert>
 
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 py-4 px-6">
-          <div className="max-w-[820px] mx-auto flex justify-between items-center">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 py-4 px-6 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-[820px] mx-auto flex justify-between items-center gap-4">
             <span className="text-sm text-gray-500">
               {valid === 0 ? t.footerNone : t.footerReady(valid)}
             </span>

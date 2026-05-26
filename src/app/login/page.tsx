@@ -9,9 +9,11 @@ export default function LoginPage() {
   return (
     <>
       <CustomerHeader />
-      <div className="min-h-[60vh] flex items-center justify-center px-6">
-        <Card className="max-w-sm w-full text-center">
-          <LogoMark />
+      <div className="min-h-[60vh] flex items-center justify-center px-6 bg-gray-50">
+        <Card className="max-w-sm w-full text-center !p-8">
+          <div className="flex justify-center">
+            <LogoMark size="lg" />
+          </div>
           <h1 className="text-xl font-semibold mt-4">{t.title}</h1>
           <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
           {showDevLinks && (
@@ -19,6 +21,7 @@ export default function LoginPage() {
               <Button full>{t.stagingCta}</Button>
             </Link>
           )}
+          <p className="text-xs text-gray-400 mt-6">{t.legal}</p>
         </Card>
       </div>
     </>

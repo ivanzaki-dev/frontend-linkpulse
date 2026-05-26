@@ -42,3 +42,24 @@ body {
 .spinner {
   animation: spin 0.9s linear infinite;
 }
+
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-primary-600 ring-offset-2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .spinner {
+    animation: none;
+  }
+
+  .skeleton {
+    background: #e5e7eb;
+  }
+}

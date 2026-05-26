@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Card, TextInput } from '@/components/ui';
+import { Button, Card, SelectField, TextInput } from '@/components/ui';
 import { listVouchers, updateVoucher } from '@/lib/api';
 
 export default function EditVoucherPage() {
@@ -33,17 +33,18 @@ export default function EditVoucherPage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-semibold">Edit voucher</h1>
-      <p className="text-sm text-gray-500">Sudah dipakai: {used} kali</p>
-      <Card className="mt-4">
-        <form onSubmit={submit} className="space-y-4">
-          <TextInput label="Kode" value={code} onChange={(e) => setCode(e.target.value)} />
-          <select className="w-full border rounded-lg px-3 py-2" value={type} onChange={(e) => setType(e.target.value as 'percent' | 'fixed')}>
+      <p className="text-sm text-gray-500 mb-4">Sudah dipakai: {used} kali</p>
+      <Card>
+        <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
+          <TextInput className="md:col-span-2" label="Kode" value={code} onChange={(e) => setCode(e.target.value)} />
+          <SelectField label="Tipe" value={type} onChange={(e) => setType(e.target.value as 'percent' | 'fixed')}>
             <option value="percent">Persen</option>
             <option value="fixed">Nominal</option>
-          </select>
+          </SelectField>
           <TextInput label="Nilai" type="number" value={String(value)} onChange={(e) => setValue(Number(e.target.value))} />
-          <Button type="submit">Simpan</Button>
+          <div className="md:col-span-2">
+            <Button type="submit">Simpan</Button>
+          </div>
         </form>
       </Card>
     </div>

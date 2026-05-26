@@ -4,9 +4,19 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { CustomerHeader } from '@/components/customer-header';
-import { Alert, Button, Card, StatusBadge } from '@/components/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  PageHeader,
+  ProgressBar,
+  ProgressStepper,
+  ResultChip,
+  StatusBadge,
+} from '@/components/ui';
 import { getOrderReport, getOrderStatus, ApiClientError } from '@/lib/api';
 import { copy } from '@/lib/copy';
+import { orderProgressSteps } from '@/lib/order-steps';
 import type { OrderStatus } from '@/lib/types';
 import { truncId } from '@/lib/utils';
 
@@ -42,16 +52,23 @@ export default function OrderStatusPage() {
   }, [orderId, t.errorLoad]);
 
   const p = status?.progress;
+  const steps = status ? orderProgressSteps(status.status, status.payment_status) : [];
 
   return (
     <>
       <CustomerHeader />
       <div className="max-w-[1120px] mx-auto px-6 py-10">
-        <Link href="/orders" className="text-sm text-gray-500">
-          {t.back}
-        </Link>
-        <h1 className="text-3xl font-semibold mt-2">{t.title}</h1>
-        <p className="text-sm text-gray-500 mt-1">No. pesanan {truncId(orderId, 12, 8)}</p>
+        <PageHeader
+          title={t.title}
+          backHref="/orders"
+          backLabel={t.back}
+          subtitle={
+            <>
+              No. pesanan{' '}
+              <span className="font-mono text-xs text-gray-600">{truncId(orderId, 12, 8)}</span>
+            </>
+          }
+        />
 
         {error && (
           <Alert kind="error" className="mt-4">
@@ -61,14 +78,25 @@ export default function OrderStatusPage() {
 
         {status && (
           <Card className="mt-6">
-            <div className="flex gap-3 items-center flex-wrap">
+            <ProgressStepper steps={steps} />
+            <div className="flex gap-3 items-center flex-wrap mt-6">
               <StatusBadge status={status.status} />
               <StatusBadge status={status.payment_status} />
             </div>
-            {p && status.status !== 'completed' && (
-              <div className="mt-6 space-y-2 text-sm">
-                <p>{t.progressScreenshots(p.screenshots_done, p.total_links)}</p>
-                <p>{t.progressAnalysis(p.analysis_done, p.total_links)}</p>
+            {p && status.status !== 'completed' && status.status !== 'failed' && (
+              <div className="mt-6 space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1.5">
+                    <span className="text-gray-600">{t.progressScreenshots(p.screenshots_done, p.total_links)}</span>
+                  </div>
+                  <ProgressBar value={p.screenshots_done} max={p.total_links} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1.5">
+                    <span className="text-gray-600">{t.progressAnalysis(p.analysis_done, p.total_links)}</span>
+                  </div>
+                  <ProgressBar value={p.analysis_done} max={p.total_links} />
+                </div>
                 <p className="text-xs text-gray-400">{t.progressHint}</p>
               </div>
             )}
@@ -81,12 +109,22 @@ export default function OrderStatusPage() {
                     status.results.error_count
                   )}
                 </Alert>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <ResultChip label="Aktif" count={status.results.active_count} variant="success" />
+                  <ResultChip label="Tidak aktif" count={status.results.inactive_count} variant="warning" />
+                  <ResultChip label="Perlu dicek" count={status.results.error_count} variant="error" />
+                </div>
                 {downloadUrl && (
                   <a href={downloadUrl} target="_blank" rel="noreferrer" className="inline-block mt-4">
                     <Button size="lg">{t.downloadPdf}</Button>
                   </a>
                 )}
               </div>
+            )}
+            {status.status === 'failed' && (
+              <Alert kind="error" className="mt-6" title={copy.preview.failedTitle}>
+                {copy.preview.failedDefault}
+              </Alert>
             )}
           </Card>
         )}
