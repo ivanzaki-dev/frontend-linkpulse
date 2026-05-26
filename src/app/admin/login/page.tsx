@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin, ApiClientError } from '@/lib/api';
-import { setAdminToken } from '@/lib/auth';
+import { setAdminEmail, setAdminToken } from '@/lib/auth';
 import { Alert, Button, Card, LogoMark, TextInput } from '@/components/ui';
 
 export default function AdminLoginPage() {
@@ -20,6 +20,7 @@ export default function AdminLoginPage() {
     try {
       const out = await adminLogin(email, password);
       setAdminToken(out.token);
+      setAdminEmail(out.email || email);
       router.push('/admin');
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Login gagal');

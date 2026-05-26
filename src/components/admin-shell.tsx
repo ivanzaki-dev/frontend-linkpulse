@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { clearAdminToken } from '@/lib/auth';
+import {
+  clearAdminToken,
+  emailFromAdminToken,
+  getAdminEmail,
+  getAdminToken,
+} from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { AdminPageHeader, LogoMark } from './ui';
 
@@ -13,6 +18,24 @@ const NAV = [
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin/orders',
+    label: 'Orders',
+    icon: (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin/orders/new',
+    label: 'Buat order',
+    icon: (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
       </svg>
     ),
   },
@@ -43,28 +66,23 @@ const NAV = [
       </svg>
     ),
   },
-  {
-    href: '/admin/orders',
-    label: 'Orders',
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    ),
-  },
 ];
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
-  '/admin': { title: 'Dashboard', subtitle: 'Kelola harga, promo, voucher, dan pesanan.' },
-  '/admin/pricing': { title: 'Pengaturan harga', subtitle: 'Harga per link Shopee — logic pricing di backend.' },
+  '/admin': { title: 'Dashboard', subtitle: 'Statistik bisnis dan ringkasan operasional.' },
+  '/admin/orders': { title: 'Orders', subtitle: 'Daftar pesanan customer dan admin.' },
+  '/admin/orders/new': { title: 'Buat order gratis', subtitle: 'Preview → order paid tanpa pembayaran.' },
+  '/admin/pricing': { title: 'Pengaturan harga', subtitle: 'Harga per link Shopee.' },
   '/admin/promotions': { title: 'Promosi', subtitle: 'Kelola diskon promosi aktif.' },
   '/admin/promotions/new': { title: 'Promosi baru' },
   '/admin/vouchers': { title: 'Voucher', subtitle: 'Kelola kode voucher.' },
   '/admin/vouchers/new': { title: 'Voucher baru' },
-  '/admin/orders': { title: 'Orders ops', subtitle: 'Operasi manual untuk pengujian.' },
 };
 
 function resolvePageMeta(pathname: string) {
+  if (pathname.match(/^\/admin\/orders\/[^/]+$/) && pathname !== '/admin/orders/new') {
+    return { title: 'Detail order' };
+  }
   if (pathname.includes('/promotions/') && pathname.endsWith('/edit')) {
     return { title: 'Edit promosi' };
   }
@@ -78,6 +96,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const meta = resolvePageMeta(pathname);
+  const adminEmail =
+    getAdminEmail() || emailFromAdminToken(getAdminToken()) || 'Admin';
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -89,10 +109,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <div className="text-[10px] text-gray-500 uppercase tracking-wide">Admin</div>
           </div>
         </div>
+        <div className="px-4 py-2 text-xs text-gray-500 truncate border-b border-gray-50">
+          {adminEmail}
+        </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {NAV.map((n) => {
             const active =
-              pathname === n.href || (n.href !== '/admin' && pathname.startsWith(n.href));
+              pathname === n.href ||
+              (n.href === '/admin/orders' &&
+                pathname.startsWith('/admin/orders') &&
+                pathname !== '/admin/orders/new') ||
+              (n.href !== '/admin' &&
+                n.href !== '/admin/orders' &&
+                pathname.startsWith(n.href));
             return (
               <Link
                 key={n.href}

@@ -1,4 +1,12 @@
-import { getAdminToken, getTestUserEmail } from './auth';
+import { clearAdminToken, getAdminToken, getTestUserEmail } from './auth';
+import type {
+  AdminLoginResponse,
+  AdminOrderDetail,
+  AdminOrderListItem,
+  AdminPreviewJob,
+  AdminStatsOverview,
+  StatsSeriesPoint,
+} from './types';
 import type { ApiError } from './types';
 
 const API_BASE =
@@ -39,6 +47,18 @@ function adminHeaders(): HeadersInit {
   const token = getAdminToken();
   if (token) h.Authorization = `Bearer ${token}`;
   return h;
+}
+
+async function adminFetch(url: string, init?: RequestInit): Promise<Response> {
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...adminHeaders(), ...(init?.headers as Record<string, string>) },
+  });
+  if (res.status === 401 && typeof window !== 'undefined') {
+    clearAdminToken();
+    window.location.href = '/admin/login';
+  }
+  return res;
 }
 
 // ——— Customer ———
@@ -117,96 +137,172 @@ export async function adminLogin(email: string, password: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  return parseJson<{ token: string; token_type: string; expires_in: string }>(res);
+  return parseJson<AdminLoginResponse>(res);
 }
 
 export async function getPricingSettings() {
-  const res = await fetch(`${API_BASE}/admin/settings/pricing`, {
-    headers: adminHeaders(),
-  });
+  const res = await adminFetch(`${API_BASE}/admin/settings/pricing`);
   return parseJson<{ pricePerLink: number; currency: string }>(res);
 }
 
 export async function setPricingSettings(price_per_link: number) {
-  const res = await fetch(`${API_BASE}/admin/settings/pricing`, {
+  const res = await adminFetch(`${API_BASE}/admin/settings/pricing`, {
     method: 'PATCH',
-    headers: adminHeaders(),
     body: JSON.stringify({ price_per_link }),
   });
   return parseJson<{ pricePerLink: number; currency: string }>(res);
 }
 
 export async function listPromotions() {
-  const res = await fetch(`${API_BASE}/admin/promotions`, { headers: adminHeaders() });
+  const res = await adminFetch(`${API_BASE}/admin/promotions`);
   return parseJson<{ promotions: import('./types').Promotion[] }>(res);
 }
 
 export async function createPromotion(data: Record<string, unknown>) {
-  const res = await fetch(`${API_BASE}/admin/promotions`, {
+  const res = await adminFetch(`${API_BASE}/admin/promotions`, {
     method: 'POST',
-    headers: adminHeaders(),
     body: JSON.stringify(data),
   });
   return parseJson<{ promotion: import('./types').Promotion }>(res);
 }
 
 export async function updatePromotion(id: string, data: Record<string, unknown>) {
-  const res = await fetch(`${API_BASE}/admin/promotions/${id}`, {
+  const res = await adminFetch(`${API_BASE}/admin/promotions/${id}`, {
     method: 'PATCH',
-    headers: adminHeaders(),
     body: JSON.stringify(data),
   });
   return parseJson<{ promotion: import('./types').Promotion }>(res);
 }
 
 export async function deletePromotion(id: string) {
-  const res = await fetch(`${API_BASE}/admin/promotions/${id}`, {
+  const res = await adminFetch(`${API_BASE}/admin/promotions/${id}`, {
     method: 'DELETE',
-    headers: adminHeaders(),
   });
   return parseJson<{ ok: boolean }>(res);
 }
 
 export async function listVouchers() {
-  const res = await fetch(`${API_BASE}/admin/vouchers`, { headers: adminHeaders() });
+  const res = await adminFetch(`${API_BASE}/admin/vouchers`);
   return parseJson<{ vouchers: import('./types').Voucher[] }>(res);
 }
 
 export async function createVoucher(data: Record<string, unknown>) {
-  const res = await fetch(`${API_BASE}/admin/vouchers`, {
+  const res = await adminFetch(`${API_BASE}/admin/vouchers`, {
     method: 'POST',
-    headers: adminHeaders(),
     body: JSON.stringify(data),
   });
   return parseJson<{ voucher: import('./types').Voucher }>(res);
 }
 
 export async function updateVoucher(id: string, data: Record<string, unknown>) {
-  const res = await fetch(`${API_BASE}/admin/vouchers/${id}`, {
+  const res = await adminFetch(`${API_BASE}/admin/vouchers/${id}`, {
     method: 'PATCH',
-    headers: adminHeaders(),
     body: JSON.stringify(data),
   });
   return parseJson<{ voucher: import('./types').Voucher }>(res);
 }
 
 export async function deleteVoucher(id: string) {
-  const res = await fetch(`${API_BASE}/admin/vouchers/${id}`, {
+  const res = await adminFetch(`${API_BASE}/admin/vouchers/${id}`, {
     method: 'DELETE',
-    headers: adminHeaders(),
   });
   return parseJson<{ ok: boolean }>(res);
 }
 
-export async function markOrderPaidAdmin(orderId: string) {
-  const res = await fetch(`${API_BASE}/admin/orders/${orderId}/mark-paid`, {
+export async function adminCreatePreviewJob(body: {
+  customer_email: string;
+  youtube_urls: string[];
+  labels?: string[];
+  voucher_code?: string;
+}) {
+  const res = await adminFetch(`${API_BASE}/admin/preview-jobs`, {
     method: 'POST',
-    headers: adminHeaders(),
+    body: JSON.stringify(body),
   });
-  return parseJson<{ ok: boolean; order_id: string; status: string }>(res);
+  return parseJson<{
+    preview_job_id: string;
+    status: string;
+    customer: { id: string; email: string; name: string | null };
+  }>(res);
+}
+
+export async function adminGetPreviewJob(id: string) {
+  const res = await adminFetch(`${API_BASE}/admin/preview-jobs/${id}`);
+  return parseJson<AdminPreviewJob>(res);
+}
+
+export async function adminCreateCompOrder(body: {
+  preview_job_id: string;
+  customer_email: string;
+}) {
+  const res = await adminFetch(`${API_BASE}/admin/orders`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return parseJson<import('./types').CreateOrderResponse & { invoice_number: string }>(res);
+}
+
+export async function listAdminOrders(params?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  q?: string;
+}) {
+  const q = new URLSearchParams();
+  if (params?.limit) q.set('limit', String(params.limit));
+  if (params?.offset) q.set('offset', String(params.offset));
+  if (params?.status) q.set('status', params.status);
+  if (params?.q) q.set('q', params.q);
+  const res = await adminFetch(`${API_BASE}/admin/orders?${q}`);
+  return parseJson<{
+    orders: AdminOrderListItem[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>(res);
+}
+
+export async function getAdminOrder(id: string) {
+  const res = await adminFetch(`${API_BASE}/admin/orders/${id}`);
+  return parseJson<AdminOrderDetail>(res);
+}
+
+export async function getAdminOrderReport(id: string) {
+  const res = await adminFetch(`${API_BASE}/admin/orders/${id}/report`);
+  return parseJson<{ report_url: string; download_url: string | null }>(res);
+}
+
+export async function markOrderPaidAdmin(orderId: string) {
+  const res = await adminFetch(`${API_BASE}/admin/orders/${orderId}/mark-paid`, {
+    method: 'POST',
+  });
+  return parseJson<{ ok: boolean; order_id: string; status: string; invoice_number?: string }>(
+    res
+  );
+}
+
+export async function getAdminStatsOverview() {
+  const res = await adminFetch(`${API_BASE}/admin/stats/overview`);
+  return parseJson<AdminStatsOverview>(res);
+}
+
+export async function getAdminStatsSeries(metric: 'revenue' | 'links' | 'orders', months = 12) {
+  const q = new URLSearchParams({ metric, months: String(months) });
+  const res = await adminFetch(`${API_BASE}/admin/stats/series?${q}`);
+  return parseJson<{ metric: string; months: number; points: StatsSeriesPoint[] }>(res);
+}
+
+export async function seedAdminStats() {
+  const res = await adminFetch(`${API_BASE}/admin/dev/seed-stats`, { method: 'POST' });
+  return parseJson<{ inserted: number }>(res);
+}
+
+export async function clearAdminStats() {
+  const res = await adminFetch(`${API_BASE}/admin/dev/seed-stats`, { method: 'DELETE' });
+  return parseJson<{ deleted: number }>(res);
 }
 
 export async function listStalePool() {
-  const res = await fetch(`${API_BASE}/admin/pool/stale`, { headers: adminHeaders() });
+  const res = await adminFetch(`${API_BASE}/admin/pool/stale`);
   return parseJson<{ stale: unknown[] }>(res);
 }
