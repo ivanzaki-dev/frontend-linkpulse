@@ -191,7 +191,13 @@ export type AdminOrderDetail = {
   };
   customer: { id: string; email: string; name: string | null } | null;
   youtube_videos: YoutubeVideoRow[];
-  links_summary: { total: number; active: number; inactive: number; error: number };
+  links_summary: {
+    total: number;
+    active: number;
+    inactive: number;
+    error: number;
+    shop_page?: number;
+  };
   pool: { pool_status: string; claimed_by: string | null } | null;
 };
 
