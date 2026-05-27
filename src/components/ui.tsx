@@ -513,16 +513,16 @@ export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement> & {
 }
 
 export function LogoMark({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-12 h-12 text-base' };
+  const px = { sm: 28, md: 36, lg: 48 }[size];
   return (
-    <span
-      className={cn(
-        'rounded-lg bg-primary-600 text-white grid place-items-center font-bold shrink-0',
-        sizes[size]
-      )}
-    >
-      LP
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element -- used in client shells; static asset
+    <img
+      src="/logo.png"
+      alt="LinkPulse"
+      width={px}
+      height={px}
+      className="shrink-0 rounded-lg object-contain"
+    />
   );
 }
 
