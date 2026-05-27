@@ -238,7 +238,7 @@ export async function deleteVoucher(id: string) {
 }
 
 export async function adminCreatePreviewJob(body: {
-  customer_email: string;
+  channel_name: string;
   youtube_urls: string[];
   labels?: string[];
   voucher_code?: string;
@@ -250,7 +250,7 @@ export async function adminCreatePreviewJob(body: {
   return parseJson<{
     preview_job_id: string;
     status: string;
-    customer: { id: string; email: string; name: string | null };
+    channel_name: string | null;
   }>(res);
 }
 
@@ -261,13 +261,21 @@ export async function adminGetPreviewJob(id: string) {
 
 export async function adminCreateCompOrder(body: {
   preview_job_id: string;
-  customer_email: string;
+  admin_name: string;
+  channel_name: string;
+  total_price: number;
 }) {
   const res = await adminFetch(`${API_BASE}/admin/orders`, {
     method: 'POST',
     body: JSON.stringify(body),
   });
-  return parseJson<import('./types').CreateOrderResponse & { invoice_number: string }>(res);
+  return parseJson<
+    import('./types').CreateOrderResponse & {
+      invoice_number: string;
+      admin_operator_name: string | null;
+      channel_name: string | null;
+    }
+  >(res);
 }
 
 export async function listAdminOrders(params?: {

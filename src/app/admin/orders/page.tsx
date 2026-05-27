@@ -104,9 +104,22 @@ export default function AdminOrdersPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">
-                    <div>{o.customer.email || '—'}</div>
-                    {o.customer.name && (
-                      <div className="text-xs text-gray-500">{o.customer.name}</div>
+                    {o.created_by_admin ? (
+                      <>
+                        <div>{o.channel_name || o.customer.name || '—'}</div>
+                        {o.admin_operator_name && (
+                          <div className="text-xs text-gray-500">
+                            Admin: {o.admin_operator_name}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div>{o.customer.email || '—'}</div>
+                        {o.customer.name && (
+                          <div className="text-xs text-gray-500">{o.customer.name}</div>
+                        )}
+                      </>
                     )}
                   </td>
                   <td className="px-4 py-3">{statusBadge(o.status)}</td>

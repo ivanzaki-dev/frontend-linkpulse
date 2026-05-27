@@ -71,9 +71,20 @@ export default function AdminOrderDetailPage() {
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-500 uppercase">Customer</div>
-            <div className="mt-1">{customer?.email || '—'}</div>
-            {customer?.name && <div className="text-gray-500">{customer.name}</div>}
+            {order.created_by_admin ? (
+              <>
+                <div className="text-xs text-gray-500 uppercase">Nama Admin</div>
+                <div className="mt-1">{order.admin_operator_name || '—'}</div>
+                <div className="text-xs text-gray-500 uppercase mt-2">User / Channel</div>
+                <div className="mt-1">{order.channel_name || customer?.name || '—'}</div>
+              </>
+            ) : (
+              <>
+                <div className="text-xs text-gray-500 uppercase">Customer</div>
+                <div className="mt-1">{customer?.email || '—'}</div>
+                {customer?.name && <div className="text-gray-500">{customer.name}</div>}
+              </>
+            )}
           </div>
           <div>
             <div className="text-xs text-gray-500 uppercase">Total</div>

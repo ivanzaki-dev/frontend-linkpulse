@@ -13,12 +13,14 @@ import { fmtIDR } from '@/lib/utils';
 
 export default function AdminNewOrderPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [channelName, setChannelName] = useState('');
+  const [totalPriceInput, setTotalPriceInput] = useState('');
   const [urlsText, setUrlsText] = useState('');
   const [previewJobId, setPreviewJobId] = useState('');
   const [status, setStatus] = useState('');
   const [linkCount, setLinkCount] = useState<number | null>(null);
-  const [totalPrice, setTotalPrice] = useState<number | null>(null);
+  const [suggestedTotal, setSuggestedTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -34,14 +36,14 @@ export default function AdminNewOrderPage() {
     setBusy(true);
     setStatus('');
     setLinkCount(null);
-    setTotalPrice(null);
+    setSuggestedTotal(null);
     try {
       const youtube_urls = urlsText
         .split('\n')
         .map((s) => s.trim())
         .filter(Boolean);
       const out = await adminCreatePreviewJob({
-        customer_email: email.trim(),
+        channel_name: channelName.trim(),
         youtube_urls,
       });
       setPreviewJobId(out.preview_job_id);
@@ -57,7 +59,11 @@ export default function AdminNewOrderPage() {
               pricing?: { total_price?: number };
             };
             setLinkCount(r.total_shopee_links ?? null);
-            setTotalPrice(r.pricing?.total_price ?? null);
+            const est = r.pricing?.total_price ?? null;
+            setSuggestedTotal(est);
+            if (est != null && !totalPriceInput.trim()) {
+              setTotalPriceInput(String(Math.round(est)));
+            }
             if (pollRef.current) clearInterval(pollRef.current);
           }
           if (job.status === 'failed') {
@@ -77,11 +83,18 @@ export default function AdminNewOrderPage() {
 
   const createOrder = async () => {
     setError('');
+    const total = Number(totalPriceInput.replace(/[^\d]/g, ''));
+    if (!Number.isFinite(total) || total < 0) {
+      setError('Total layanan harus angka valid (Rp)');
+      return;
+    }
     setBusy(true);
     try {
       const out = await adminCreateCompOrder({
         preview_job_id: previewJobId,
-        customer_email: email.trim(),
+        admin_name: adminName.trim(),
+        channel_name: channelName.trim(),
+        total_price: total,
       });
       router.push(`/admin/orders/${out.order_id}`);
     } catch (e) {
@@ -99,8 +112,8 @@ export default function AdminNewOrderPage() {
 
       <Card>
         <p className="text-sm text-gray-600">
-          Alur sama seperti customer: extract link via preview worker → order otomatis{' '}
-          <strong>paid</strong> (gratis).
+          Preview extract link → isi total manual → order otomatis{' '}
+          <strong>paid</strong> (gratis) dan masuk antrian worker.
         </p>
         {error && (
           <Alert kind="error" className="mt-3">
@@ -109,10 +122,18 @@ export default function AdminNewOrderPage() {
         )}
         <TextInput
           className="mt-4"
-          label="Email customer"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          label="Nama Admin"
+          value={adminName}
+          onChange={(e) => setAdminName(e.target.value)}
+          placeholder="Nama operator / admin"
+          required
+        />
+        <TextInput
+          className="mt-3"
+          label="Nama User / Channel"
+          value={channelName}
+          onChange={(e) => setChannelName(e.target.value)}
+          placeholder="Nama creator atau channel YouTube"
           required
         />
         <label className="block mt-3 text-sm font-medium text-gray-700">
@@ -135,11 +156,27 @@ export default function AdminNewOrderPage() {
             </div>
             {linkCount != null && (
               <div>
-                {linkCount} link · estimasi {totalPrice != null ? fmtIDR(totalPrice) : '—'}
+                {linkCount} link Shopee
+                {suggestedTotal != null && (
+                  <span className="text-gray-500">
+                    {' '}
+                    · estimasi sistem {fmtIDR(suggestedTotal)}
+                  </span>
+                )}
               </div>
             )}
           </div>
         )}
+
+        <TextInput
+          className="mt-4"
+          label="Total layanan (Rp)"
+          inputMode="numeric"
+          value={totalPriceInput}
+          onChange={(e) => setTotalPriceInput(e.target.value)}
+          placeholder="Contoh: 120000"
+          required
+        />
 
         <Button
           className="mt-4"
@@ -148,7 +185,7 @@ export default function AdminNewOrderPage() {
           loading={busy}
           onClick={createOrder}
         >
-          2. Buat order (gratis / paid)
+          2. Buat order (paid otomatis)
         </Button>
       </Card>
     </div>

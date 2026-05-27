@@ -164,6 +164,8 @@ export type AdminOrderListItem = {
   paid_at: string | null;
   completed_at: string | null;
   created_by_admin: boolean;
+  admin_operator_name?: string | null;
+  channel_name?: string | null;
   customer: { id: string; email: string | null; name: string | null };
 };
 
@@ -184,6 +186,8 @@ export type AdminOrderDetail = {
     paid_at: string | null;
     completed_at: string | null;
     created_by_admin: boolean;
+    admin_operator_name?: string | null;
+    channel_name?: string | null;
   };
   customer: { id: string; email: string; name: string | null } | null;
   youtube_videos: YoutubeVideoRow[];
