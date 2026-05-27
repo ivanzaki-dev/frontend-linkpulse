@@ -129,8 +129,11 @@ export default function AdminOrderDetailPage() {
       <Card>
         <h3 className="font-medium text-sm">Hasil link</h3>
         <p className="text-sm text-gray-600 mt-1">
-          ACTIVE {links_summary.active} · INACTIVE {links_summary.inactive} · ERROR{' '}
-          {links_summary.error} · total {links_summary.total}
+          ACTIVE {links_summary.active} · INACTIVE {links_summary.inactive}
+          {links_summary.shop_page != null && links_summary.shop_page > 0
+            ? ` · SHOP ${links_summary.shop_page}`
+            : ''}{' '}
+          · ERROR {links_summary.error} · total {links_summary.total}
         </p>
         {pool && (
           <p className="text-xs text-gray-500 mt-2">
