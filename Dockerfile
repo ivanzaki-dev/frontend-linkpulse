@@ -12,6 +12,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG NEXT_PUBLIC_API_URL=https://mo5ub2s6knxuqchfa3m925ep.app.ivanzaki.online/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Required for next build (avoids prerender / Html errors if host injects NODE_ENV=development)
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+# Coolify/VPS builds can OOM during compile without a higher heap
+ENV NODE_OPTIONS=--max-old-space-size=2048
 RUN npm run build
 
 FROM base AS runner

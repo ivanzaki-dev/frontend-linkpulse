@@ -11,10 +11,11 @@ Response `200`: `{ "status": "ok", "service": "linkpulse-frontend" }`
 ## Coolify setup
 
 1. New resource → **GitHub** → repo `ivanzaki-dev/frontend-linkpulse`, branch `main`
-2. Build pack: **Dockerfile** (root `Dockerfile`)
+2. Build pack: **Dockerfile** (root `Dockerfile` — jangan pakai Nixpacks auto-generated)
 3. Port: **3000**
-4. Health check path: `/api/health`
-5. Environment variables:
+4. Build timeout: minimal **10 menit** (Next.js compile + static gen ~1–3 menit di VPS kecil)
+5. Health check path: `/api/health`
+6. Environment variables:
 
 | `NEXT_PUBLIC_SHOW_DEV_LINKS` | `false` on public production (hides footer dev/admin links) |
 
@@ -29,7 +30,9 @@ Response `200`: `{ "status": "ok", "service": "linkpulse-frontend" }`
 
 > `NEXT_PUBLIC_*` is baked at image build time. Set it in Coolify **Build** variables or Dockerfile `ARG`.
 
-6. On backend Coolify service, add frontend URL to `CORS_ORIGIN` (comma-separated).
+7. On backend Coolify service, add frontend URL to `CORS_ORIGIN` (comma-separated).
+
+**Build gagal di “Creating an optimized production build” (~20 detik):** biasanya timeout Coolify atau RAM. Pastikan build timeout ≥10 menit; Dockerfile memaksa `NODE_ENV=production` di stage builder.
 
 ## Local Docker test
 

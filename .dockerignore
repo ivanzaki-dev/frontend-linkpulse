@@ -10,3 +10,6 @@ npm-debug.log*
 .DS_Store
 README.md
 DEPLOY.md
+tsconfig.tsbuildinfo
+coverage
+.eslintcache
