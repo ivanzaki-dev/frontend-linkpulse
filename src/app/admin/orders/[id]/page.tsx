@@ -137,7 +137,14 @@ export default function AdminOrderDetailPage() {
         </p>
         {pool && (
           <p className="text-xs text-gray-500 mt-2">
-            Pool: {pool.pool_status}
+            Pool:{' '}
+            {pool.pool_status === 'paused' ? (
+              <span className="text-amber-700 font-medium">
+                paused — menunggu operator (worker)
+              </span>
+            ) : (
+              pool.pool_status
+            )}
             {pool.claimed_by ? ` · ${pool.claimed_by}` : ''}
           </p>
         )}
