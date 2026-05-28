@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   clearAdminToken,
   emailFromAdminToken,
@@ -96,8 +97,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const meta = resolvePageMeta(pathname);
-  const adminEmail =
-    getAdminEmail() || emailFromAdminToken(getAdminToken()) || 'Admin';
+  const [adminEmail, setAdminEmail] = useState('Admin');
+
+  useEffect(() => {
+    setAdminEmail(
+      getAdminEmail() || emailFromAdminToken(getAdminToken()) || 'Admin'
+    );
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -109,7 +115,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <div className="text-[10px] text-gray-500 uppercase tracking-wide">Admin</div>
           </div>
         </div>
-        <div className="px-4 py-2 text-xs text-gray-500 truncate border-b border-gray-50">
+        <div
+          className="px-4 py-2 text-xs text-gray-500 truncate border-b border-gray-50"
+          suppressHydrationWarning
+        >
           {adminEmail}
         </div>
         <nav className="flex-1 p-2 space-y-0.5">

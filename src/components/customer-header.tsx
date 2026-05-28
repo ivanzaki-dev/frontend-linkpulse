@@ -1,12 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Button, LogoMark } from './ui';
 import { getTestUserEmail } from '@/lib/auth';
 import { copy } from '@/lib/copy';
 
 export function CustomerHeader() {
-  const email = typeof window !== 'undefined' ? getTestUserEmail() : '';
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    setEmail(getTestUserEmail());
+  }, []);
   const t = copy.landing;
   return (
     <header className="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-gray-100">
@@ -36,7 +41,12 @@ export function CustomerHeader() {
           </Link>
         </nav>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline text-xs text-gray-500 truncate max-w-[140px]">{email}</span>
+          <span
+            className="hidden sm:inline text-xs text-gray-500 truncate max-w-[140px]"
+            suppressHydrationWarning
+          >
+            {email}
+          </span>
           <Link href="/login" className="hidden sm:inline-flex min-h-11 items-center px-3 text-sm text-gray-600 hover:text-gray-900">
             {t.ctaLogin}
           </Link>
