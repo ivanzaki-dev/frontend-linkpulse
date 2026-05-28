@@ -14,17 +14,19 @@ import {
   ResultChip,
   StatusBadge,
 } from '@/components/ui';
-import { getOrderReport, getOrderStatus, ApiClientError } from '@/lib/api';
+import { getOrderReportData, getOrderStatus, ApiClientError } from '@/lib/api';
 import { copy } from '@/lib/copy';
+import { downloadOrderReportPdf } from '@/lib/generate-pdf';
 import { orderProgressSteps } from '@/lib/order-steps';
-import type { OrderStatus } from '@/lib/types';
+import type { OrderReportData, OrderStatus } from '@/lib/types';
 import { truncId } from '@/lib/utils';
 
 export default function OrderStatusPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const t = copy.orderStatus;
   const [status, setStatus] = useState<OrderStatus | null>(null);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<OrderReportData | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -35,8 +37,8 @@ export default function OrderStatusPage() {
         if (!active) return;
         setStatus(s);
         if (s.status === 'completed') {
-          const rep = await getOrderReport(orderId);
-          setDownloadUrl(rep.download_url || rep.report_url);
+          const data = await getOrderReportData(orderId);
+          if (active) setReportData(data);
         }
         if (s.status !== 'completed' && s.status !== 'failed') {
           setTimeout(load, 5000);
@@ -53,6 +55,23 @@ export default function OrderStatusPage() {
 
   const p = status?.progress;
   const steps = status ? orderProgressSteps(status.status, status.payment_status) : [];
+  const terminal = p?.terminal_links ?? p?.analysis_done ?? 0;
+  const total = p?.total_links ?? 0;
+
+  const onDownloadPdf = () => {
+    if (!reportData?.report) return;
+    setPdfLoading(true);
+    try {
+      downloadOrderReportPdf(
+        { report: reportData.report },
+        `linkpulse-${orderId.slice(0, 8)}.pdf`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal membuat PDF');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   return (
     <>
@@ -87,37 +106,47 @@ export default function OrderStatusPage() {
               <div className="mt-6 space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-gray-600">{t.progressScreenshots(p.screenshots_done, p.total_links)}</span>
+                    <span className="text-gray-600">
+                      Progress link ({terminal} / {total})
+                    </span>
                   </div>
-                  <ProgressBar value={p.screenshots_done} max={p.total_links} />
+                  <ProgressBar value={terminal} max={total || 1} />
                 </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-gray-600">{t.progressAnalysis(p.analysis_done, p.total_links)}</span>
-                  </div>
-                  <ProgressBar value={p.analysis_done} max={p.total_links} />
-                </div>
+                {(p.paused_links ?? 0) > 0 && (
+                  <p className="text-sm text-amber-700">
+                    {p.paused_links} link ditunda (captcha) — menunggu resume.
+                  </p>
+                )}
                 <p className="text-xs text-gray-400">{t.progressHint}</p>
               </div>
             )}
             {status.status === 'completed' && status.results && (
               <div className="mt-6">
                 <Alert kind="success" title={t.doneTitle}>
-                  {t.doneSummary(
-                    status.results.active_count,
-                    status.results.inactive_count,
-                    status.results.error_count
-                  )}
+                  {status.results.active_count} aktif · {status.results.inactive_count} tidak
+                  aktif
+                  {(status.results.uncheckable_count ?? status.results.error_count ?? 0) > 0 &&
+                    ` · ${status.results.uncheckable_count ?? status.results.error_count} tidak bisa diperiksa`}
                 </Alert>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <ResultChip label="Aktif" count={status.results.active_count} variant="success" />
-                  <ResultChip label="Tidak aktif" count={status.results.inactive_count} variant="warning" />
-                  <ResultChip label="Perlu dicek" count={status.results.error_count} variant="error" />
+                  <ResultChip
+                    label="Tidak aktif"
+                    count={status.results.inactive_count}
+                    variant="warning"
+                  />
+                  <ResultChip
+                    label="Tidak bisa diperiksa"
+                    count={
+                      status.results.uncheckable_count ?? status.results.error_count ?? 0
+                    }
+                    variant="error"
+                  />
                 </div>
-                {downloadUrl && (
-                  <a href={downloadUrl} target="_blank" rel="noreferrer" className="inline-block mt-4">
-                    <Button size="lg">{t.downloadPdf}</Button>
-                  </a>
+                {reportData?.report && (
+                  <Button className="mt-4" size="lg" loading={pdfLoading} onClick={onDownloadPdf}>
+                    Generate PDF
+                  </Button>
                 )}
               </div>
             )}

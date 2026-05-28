@@ -15,10 +15,11 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
+  const checkout_intent_id = body.checkout_intent_id as string | undefined;
   const order_id = body.order_id as string | undefined;
-  if (!order_id) {
+  if (!checkout_intent_id && !order_id) {
     return NextResponse.json(
-      { error: { message: 'order_id required' } },
+      { error: { message: 'checkout_intent_id or order_id required' } },
       { status: 400 }
     );
   }
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
       'X-Webhook-Secret': secret,
     },
     body: JSON.stringify({
+      checkout_intent_id,
       order_id,
       payment_ref: body.payment_ref || `sim-${Date.now()}`,
     }),

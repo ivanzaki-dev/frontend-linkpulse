@@ -19,7 +19,12 @@ import {
   SkeletonRow,
   StatusBadge,
 } from '@/components/ui';
-import { createOrder, getPreviewJob, ApiClientError } from '@/lib/api';
+import {
+  createCheckoutIntent,
+  getPreviewJob,
+  MAX_SHOPEE_LINKS_PER_ORDER,
+  ApiClientError,
+} from '@/lib/api';
 import { copy } from '@/lib/copy';
 import type { PreviewJob } from '@/lib/types';
 import { fmtIDR } from '@/lib/utils';
@@ -61,10 +66,15 @@ export default function PreviewPage() {
 
   const checkout = async () => {
     if (!job?.preview_job_id) return;
+    const total = job.total_shopee_links ?? 0;
+    if (total > MAX_SHOPEE_LINKS_PER_ORDER) {
+      setError(`Maksimal ${MAX_SHOPEE_LINKS_PER_ORDER} link Shopee per pesanan.`);
+      return;
+    }
     setCheckoutLoading(true);
     try {
-      const order = await createOrder({ preview_job_id: job.preview_job_id });
-      router.push(`/checkout/${order.order_id}`);
+      const intent = await createCheckoutIntent({ preview_job_id: job.preview_job_id });
+      router.push(`/checkout/${intent.checkout_intent_id}`);
     } catch (e) {
       setError(e instanceof ApiClientError ? e.message : t.errorOrder);
     } finally {
@@ -126,7 +136,18 @@ export default function PreviewPage() {
           <>
             <Alert kind="success" className="mt-6" title={t.doneTitle(job.total_shopee_links ?? 0)}>
               {t.doneHint}
+              {(job.total_shopee_links ?? 0) > MAX_SHOPEE_LINKS_PER_ORDER && (
+                <span className="block mt-2 text-amber-800">
+                  Melebihi batas {MAX_SHOPEE_LINKS_PER_ORDER} link — kurangi URL YouTube atau
+                  tautan sebelum checkout.
+                </span>
+              )}
             </Alert>
+            {(job.total_shopee_links ?? 0) <= MAX_SHOPEE_LINKS_PER_ORDER && (
+              <p className="text-sm text-gray-500 mt-2">
+                {job.total_shopee_links} / {MAX_SHOPEE_LINKS_PER_ORDER} link Shopee
+              </p>
+            )}
             <div className="grid lg:grid-cols-[1fr_360px] gap-5 mt-5">
               <Card>
                 <div className="flex justify-between items-center mb-4">
@@ -165,7 +186,13 @@ export default function PreviewPage() {
               </Card>
               <div className="space-y-4">
                 <PricingCard pricing={job.pricing} note={t.pricingNote} />
-                <Button size="lg" full loading={checkoutLoading} onClick={checkout}>
+                <Button
+                  size="lg"
+                  full
+                  loading={checkoutLoading}
+                  onClick={checkout}
+                  disabled={(job.total_shopee_links ?? 0) > MAX_SHOPEE_LINKS_PER_ORDER}
+                >
                   {t.checkout}
                 </Button>
               </div>

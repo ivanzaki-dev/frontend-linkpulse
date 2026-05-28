@@ -29,6 +29,17 @@ export type PreviewJob = {
   error?: { code: string; message: string };
 };
 
+export type CheckoutIntentResponse = {
+  checkout_intent_id: string;
+  status: string;
+  quoted_link_count: number;
+  quoted_total_price: number;
+  currency: string;
+  expires_at: string;
+  pricing?: Pricing;
+  youtube_videos?: YoutubeVideoRow[];
+};
+
 export type CreateOrderResponse = {
   order_id: string;
   status: string;
@@ -57,17 +68,49 @@ export type OrderStatus = {
   payment_status: string;
   progress: {
     total_links: number;
-    screenshots_done: number;
-    screenshots_failed: number;
-    analysis_done: number;
+    terminal_links?: number;
+    queued_links?: number;
+    claimed_links?: number;
+    paused_links?: number;
+    screenshots_done?: number;
+    screenshots_failed?: number;
+    analysis_done?: number;
     current_step: string;
   };
   results: {
     active_count: number;
     inactive_count: number;
-    error_count: number;
-    report_url: string | null;
+    error_count?: number;
+    uncheckable_count?: number;
+    report_url?: string | null;
   } | null;
+};
+
+export type OrderReportData = {
+  order: { id: string; status: string; completed_at?: string | null };
+  report: {
+    order_id: string;
+    summary: {
+      total: number;
+      active: number;
+      inactive: number;
+      uncheckable: number;
+    };
+    videos: Array<{
+      label: string;
+      youtube_url?: string;
+      links: Array<{
+        index: number;
+        display_url: string;
+        final_status: string | null;
+      }>;
+    }>;
+  } | null;
+  progress?: {
+    total_links: number;
+    terminal_links: number;
+    paused_links: number;
+  };
 };
 
 export type Promotion = {
@@ -191,14 +234,26 @@ export type AdminOrderDetail = {
   };
   customer: { id: string; email: string; name: string | null } | null;
   youtube_videos: YoutubeVideoRow[];
+  links?: Array<{
+    id: string;
+    index: number;
+    display_url: string;
+    capture_status: string;
+    final_status: string | null;
+    retry_count: number;
+  }>;
   links_summary: {
     total: number;
+    terminal?: number;
+    queued?: number;
+    claimed?: number;
+    paused?: number;
     active: number;
     inactive: number;
-    error: number;
+    uncheckable?: number;
+    error?: number;
     shop_page?: number;
   };
-  pool: { pool_status: string; claimed_by: string | null } | null;
 };
 
 export type AdminPreviewJob = {

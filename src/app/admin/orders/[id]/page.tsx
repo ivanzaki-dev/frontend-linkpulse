@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Alert, Button, Card } from '@/components/ui';
-import { getAdminOrder, getAdminOrderReport, markOrderPaidAdmin } from '@/lib/api';
+import {
+  adminRequeueOrderLink,
+  getAdminOrder,
+  getAdminOrderReportData,
+  markOrderPaidAdmin,
+} from '@/lib/api';
+import { downloadOrderReportPdf } from '@/lib/generate-pdf';
 import type { AdminOrderDetail } from '@/lib/types';
 import { fmtIDR } from '@/lib/utils';
 
@@ -14,6 +20,7 @@ export default function AdminOrderDetailPage() {
   const [detail, setDetail] = useState<AdminOrderDetail | null>(null);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -29,13 +36,21 @@ export default function AdminOrderDetailPage() {
   }, [id]);
 
   const downloadReport = async () => {
+    setPdfLoading(true);
     try {
-      const r = await getAdminOrderReport(id);
-      const url = r.download_url || r.report_url;
-      if (url) window.open(url, '_blank');
-      else setMsg('URL laporan tidak tersedia');
+      const data = await getAdminOrderReportData(id);
+      if (!data.report) {
+        setMsg('Laporan belum siap');
+        return;
+      }
+      downloadOrderReportPdf(
+        { report: data.report },
+        `linkpulse-${id.slice(0, 8)}.pdf`
+      );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Laporan belum siap');
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -45,10 +60,20 @@ export default function AdminOrderDetailPage() {
     await load();
   };
 
+  const requeueLink = async (linkId: string) => {
+    await adminRequeueOrderLink(linkId);
+    setMsg('Link di-requeue');
+    await load();
+  };
+
   if (loading) return <p className="text-sm text-gray-500">Memuat detail…</p>;
   if (!detail) return <p className="text-sm text-red-600">Order tidak ditemukan</p>;
 
-  const { order, customer, youtube_videos, links_summary, pool } = detail;
+  const { order, customer, youtube_videos, links_summary, links } = detail;
+  const progress =
+    links_summary.terminal != null
+      ? `${links_summary.terminal} / ${links_summary.total} selesai`
+      : `${links_summary.total} link`;
 
   return (
     <div className="space-y-4 max-w-3xl">
@@ -69,6 +94,7 @@ export default function AdminOrderDetailPage() {
             <div className="mt-1">
               {order.status} · {order.payment_status}
             </div>
+            <div className="text-xs text-gray-500 mt-1">Progress: {progress}</div>
           </div>
           <div>
             {order.created_by_admin ? (
@@ -93,14 +119,6 @@ export default function AdminOrderDetailPage() {
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 text-sm space-y-1">
-          <div>Subtotal: {fmtIDR(order.subtotal)}</div>
-          <div>Diskon: {fmtIDR(order.discount_amount)}</div>
-          {order.created_by_admin && (
-            <div className="text-amber-700 text-xs">Order komplimen (admin)</div>
-          )}
-        </div>
-
         <div className="flex flex-wrap gap-2 mt-4">
           {order.payment_status !== 'paid' && (
             <Button type="button" onClick={markPaid}>
@@ -108,8 +126,8 @@ export default function AdminOrderDetailPage() {
             </Button>
           )}
           {order.status === 'completed' && (
-            <Button type="button" variant="secondary" onClick={downloadReport}>
-              Unduh PDF laporan
+            <Button type="button" variant="secondary" loading={pdfLoading} onClick={downloadReport}>
+              Generate PDF
             </Button>
           )}
         </div>
@@ -129,24 +147,28 @@ export default function AdminOrderDetailPage() {
       <Card>
         <h3 className="font-medium text-sm">Hasil link</h3>
         <p className="text-sm text-gray-600 mt-1">
-          ACTIVE {links_summary.active} · INACTIVE {links_summary.inactive}
-          {links_summary.shop_page != null && links_summary.shop_page > 0
-            ? ` · SHOP ${links_summary.shop_page}`
-            : ''}{' '}
-          · ERROR {links_summary.error} · total {links_summary.total}
+          ACTIVE {links_summary.active} · INACTIVE {links_summary.inactive} · UNCHECKABLE{' '}
+          {links_summary.uncheckable ?? 0} · paused {links_summary.paused ?? 0} · queued{' '}
+          {links_summary.queued ?? 0} · total {links_summary.total}
         </p>
-        {pool && (
-          <p className="text-xs text-gray-500 mt-2">
-            Pool:{' '}
-            {pool.pool_status === 'paused' ? (
-              <span className="text-amber-700 font-medium">
-                paused — menunggu operator (worker)
-              </span>
-            ) : (
-              pool.pool_status
-            )}
-            {pool.claimed_by ? ` · ${pool.claimed_by}` : ''}
-          </p>
+        {links && links.length > 0 && (
+          <ul className="mt-3 space-y-2 text-xs max-h-64 overflow-y-auto">
+            {links
+              .filter((l) => l.capture_status === 'paused' || l.capture_status === 'claimed')
+              .map((l) => (
+                <li key={l.id} className="flex justify-between gap-2 border-t pt-2">
+                  <span>
+                    #{l.index} {l.capture_status}{' '}
+                    {l.final_status ? `· ${l.final_status}` : ''}
+                  </span>
+                  {(l.capture_status === 'paused' || l.capture_status === 'claimed') && (
+                    <Button type="button" size="sm" variant="ghost" onClick={() => requeueLink(l.id)}>
+                      Requeue
+                    </Button>
+                  )}
+                </li>
+              ))}
+          </ul>
         )}
       </Card>
     </div>

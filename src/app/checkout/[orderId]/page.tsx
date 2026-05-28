@@ -4,32 +4,40 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CustomerHeader } from '@/components/customer-header';
-import { Alert, Button, Card, OrderSummaryCard, PageHeader, StatusBadge } from '@/components/ui';
-import { getOrderStatus, payOrderSimulated, ApiClientError } from '@/lib/api';
-import { copy, labelStatus } from '@/lib/copy';
-import type { OrderStatus } from '@/lib/types';
-import { truncId } from '@/lib/utils';
+import {
+  Alert,
+  Button,
+  Card,
+  OrderSummaryCard,
+  PageHeader,
+  StatusBadge,
+} from '@/components/ui';
+import { getCheckoutIntent, payCheckoutSimulated, ApiClientError } from '@/lib/api';
+import { copy } from '@/lib/copy';
+import { fmtIDR, truncId } from '@/lib/utils';
+import type { CheckoutIntentResponse } from '@/lib/types';
 
 export default function CheckoutPage() {
-  const { orderId } = useParams<{ orderId: string }>();
+  const { orderId: intentId } = useParams<{ orderId: string }>();
   const router = useRouter();
   const t = copy.checkout;
-  const [order, setOrder] = useState<OrderStatus | null>(null);
+  const [intent, setIntent] = useState<CheckoutIntentResponse | null>(null);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getOrderStatus(orderId)
-      .then(setOrder)
+    getCheckoutIntent(intentId)
+      .then(setIntent)
       .catch((e) => setError(e instanceof ApiClientError ? e.message : t.errorLoad));
-  }, [orderId, t.errorLoad]);
+  }, [intentId, t.errorLoad]);
 
   const pay = async () => {
+    if (!intent?.checkout_intent_id) return;
     setPaying(true);
     setError('');
     try {
-      await payOrderSimulated(orderId);
-      router.push(`/orders/${orderId}`);
+      const result = await payCheckoutSimulated(intent.checkout_intent_id);
+      router.push(`/orders/${result.order_id}`);
     } catch (e) {
       setError(e instanceof ApiClientError ? e.message : t.errorPay);
     } finally {
@@ -37,7 +45,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const linkCount = order?.progress?.total_links;
+  const linkCount = intent?.quoted_link_count;
 
   return (
     <>
@@ -47,8 +55,10 @@ export default function CheckoutPage() {
           title={t.title}
           subtitle={
             <>
-              No. pesanan{' '}
-              <span className="font-mono text-xs text-gray-600">{truncId(orderId, 12, 8)}</span>
+              Checkout{' '}
+              <span className="font-mono text-xs text-gray-600">
+                {truncId(intent?.checkout_intent_id || intentId, 12, 8)}
+              </span>
             </>
           }
         />
@@ -63,12 +73,24 @@ export default function CheckoutPage() {
           <Card>
             <div className="flex justify-between items-center">
               <h3 className="font-semibold">{t.payTitle}</h3>
-              <StatusBadge status={order?.payment_status || 'pending'} />
+              <StatusBadge status={intent?.status === 'paid' ? 'paid' : 'pending'} />
             </div>
             <div className="mt-3 rounded-lg border-2 border-dashed border-primary-200 bg-primary-50/50 p-4 text-sm text-primary-800">
               {t.paySimHint}
             </div>
-            <Button className="mt-4" size="lg" full loading={paying} onClick={pay}>
+            {intent?.quoted_total_price != null && (
+              <p className="mt-4 text-2xl font-semibold tabular-nums">
+                {fmtIDR(intent.quoted_total_price)}
+              </p>
+            )}
+            <Button
+              className="mt-4"
+              size="lg"
+              full
+              loading={paying}
+              onClick={pay}
+              disabled={!intent || intent.status !== 'open'}
+            >
               {t.paySim}
             </Button>
             <Link
@@ -81,11 +103,10 @@ export default function CheckoutPage() {
           <div className="space-y-4">
             <OrderSummaryCard linkCount={linkCount ?? null} />
             <Card>
-              <p className="text-sm text-gray-500">{t.statusLabel}</p>
-              <p className="text-lg font-medium mt-1">
-                {order?.status ? labelStatus(order.status) : '…'}
+              <p className="text-sm text-gray-500">{t.afterPay}</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Setelah bayar, pesanan dibuat otomatis dan diproses worker.
               </p>
-              <p className="text-sm text-gray-500 mt-4">{t.afterPay}</p>
             </Card>
           </div>
         </div>

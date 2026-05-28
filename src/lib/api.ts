@@ -105,16 +105,36 @@ export async function getPreviewJob(id: string) {
   return parseJson<import('./types').PreviewJob>(res);
 }
 
-export async function createOrder(body: {
+export const MAX_YOUTUBE_PER_ORDER = 20;
+export const MAX_SHOPEE_LINKS_PER_ORDER = 300;
+
+export async function createCheckoutIntent(body: {
   preview_job_id: string;
   voucher_code?: string;
 }) {
-  const res = await fetch(`${API_BASE}/orders`, {
+  const res = await fetch(`${API_BASE}/checkout`, {
     method: 'POST',
     headers: customerHeaders(),
     body: JSON.stringify(body),
   });
-  return parseJson<import('./types').CreateOrderResponse>(res);
+  return parseJson<import('./types').CheckoutIntentResponse>(res);
+}
+
+export async function getCheckoutIntent(id: string) {
+  const res = await fetch(`${API_BASE}/checkout/${id}`, {
+    headers: customerHeaders(),
+  });
+  return parseJson<import('./types').CheckoutIntentResponse & { preview_job_id?: string }>(
+    res
+  );
+}
+
+/** @deprecated Use createCheckoutIntent */
+export async function createOrder(body: {
+  preview_job_id: string;
+  voucher_code?: string;
+}) {
+  return createCheckoutIntent(body);
 }
 
 export async function listOrders(params?: { limit?: number; offset?: number }) {
@@ -134,19 +154,19 @@ export async function getOrderStatus(id: string) {
   return parseJson<import('./types').OrderStatus>(res);
 }
 
-export async function getOrderReport(id: string) {
-  const res = await fetch(`${API_BASE}/orders/${id}/report`, {
+export async function getOrderReportData(id: string) {
+  const res = await fetch(`${API_BASE}/orders/${id}/report-data`, {
     headers: customerHeaders(),
   });
-  return parseJson<{ report_url: string; download_url?: string }>(res);
+  return parseJson<import('./types').OrderReportData>(res);
 }
 
 /** Server-side pay simulation via Next route */
-export async function payOrderSimulated(orderId: string) {
+export async function payCheckoutSimulated(checkoutIntentId: string) {
   const res = await fetch('/api/pay', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ order_id: orderId }),
+    body: JSON.stringify({ checkout_intent_id: checkoutIntentId }),
   });
   return parseJson<{ ok: boolean; order_id: string; status: string }>(res);
 }
@@ -303,9 +323,16 @@ export async function getAdminOrder(id: string) {
   return parseJson<AdminOrderDetail>(res);
 }
 
-export async function getAdminOrderReport(id: string) {
-  const res = await adminFetch(`${API_BASE}/admin/orders/${id}/report`);
-  return parseJson<{ report_url: string; download_url: string | null }>(res);
+export async function getAdminOrderReportData(id: string) {
+  const res = await adminFetch(`${API_BASE}/admin/orders/${id}/report-data`);
+  return parseJson<import('./types').OrderReportData>(res);
+}
+
+export async function adminRequeueOrderLink(linkId: string) {
+  const res = await adminFetch(`${API_BASE}/admin/order-links/${linkId}/requeue`, {
+    method: 'POST',
+  });
+  return parseJson<{ ok: boolean; link_id: string; capture_status: string }>(res);
 }
 
 export async function markOrderPaidAdmin(orderId: string) {
@@ -338,7 +365,3 @@ export async function clearAdminStats() {
   return parseJson<{ deleted: number }>(res);
 }
 
-export async function listStalePool() {
-  const res = await adminFetch(`${API_BASE}/admin/pool/stale`);
-  return parseJson<{ stale: unknown[] }>(res);
-}
